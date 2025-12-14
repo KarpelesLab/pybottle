@@ -187,10 +187,10 @@ class TestPregenIDCards:
     """Tests for pre-generated IDCards from Go cryptutil."""
 
     def test_alice_idcard(self):
-        """Test unmarshaling Alice's IDCard."""
+        """Test loading Alice's IDCard."""
         alice = get_alice()
 
-        idcard = IDCard.unmarshal(ALICE_IDCARD)
+        idcard = IDCard.load(ALICE_IDCARD)
 
         assert idcard.meta["name"] == "Alice"
         # Check key purposes
@@ -198,30 +198,30 @@ class TestPregenIDCards:
         idcard.test_key_purpose(alice.public_key(), "decrypt")
 
     def test_bob_idcard(self):
-        """Test unmarshaling Bob's IDCard."""
+        """Test loading Bob's IDCard."""
         bob = get_bob()
 
-        idcard = IDCard.unmarshal(BOB_IDCARD)
+        idcard = IDCard.load(BOB_IDCARD)
 
         assert idcard.meta["name"] == "Bob"
         idcard.test_key_purpose(bob.public_key(), "sign")
         idcard.test_key_purpose(bob.public_key(), "decrypt")
 
     def test_chloe_idcard(self):
-        """Test unmarshaling Chloe's IDCard."""
+        """Test loading Chloe's IDCard."""
         chloe = get_chloe()
 
-        idcard = IDCard.unmarshal(CHLOE_IDCARD)
+        idcard = IDCard.load(CHLOE_IDCARD)
 
         assert idcard.meta["name"] == "Chloe"
         idcard.test_key_purpose(chloe.public_key(), "sign")
         idcard.test_key_purpose(chloe.public_key(), "decrypt")
 
     def test_daniel_idcard(self):
-        """Test unmarshaling Daniel's IDCard."""
+        """Test loading Daniel's IDCard."""
         daniel = get_daniel()
 
-        idcard = IDCard.unmarshal(DANIEL_IDCARD)
+        idcard = IDCard.load(DANIEL_IDCARD)
 
         assert idcard.meta["name"] == "Daniel"
         idcard.test_key_purpose(daniel.public_key(), "sign")

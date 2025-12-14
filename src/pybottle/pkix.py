@@ -23,9 +23,9 @@ PrivateKeyType = Union[
 ]
 
 
-def marshal_pkix_public_key(key: PublicKeyType) -> bytes:
+def encode_public_key(key: PublicKeyType) -> bytes:
     """
-    Marshal a public key to PKIX/ASN.1 DER format.
+    Encode a public key to PKIX/ASN.1 DER format.
 
     Args:
         key: A public key object
@@ -42,7 +42,7 @@ def marshal_pkix_public_key(key: PublicKeyType) -> bytes:
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
         )
     except Exception as e:
-        raise UnsupportedKeyTypeError(f"Cannot marshal public key of type {type(key).__name__}: {e}")
+        raise UnsupportedKeyTypeError(f"Cannot encode public key of type {type(key).__name__}: {e}")
 
 
 def parse_pkix_public_key(der: bytes) -> PublicKeyType:
@@ -92,7 +92,7 @@ def key_to_bytes(key: PublicKeyType | PrivateKeyType) -> bytes:
     if hasattr(key, "public_key"):
         # It's a private key, get the public key
         key = key.public_key()
-    return marshal_pkix_public_key(key)
+    return encode_public_key(key)
 
 
 def keys_equal(key1: PublicKeyType | bytes, key2: PublicKeyType | bytes) -> bool:
@@ -109,11 +109,11 @@ def keys_equal(key1: PublicKeyType | bytes, key2: PublicKeyType | bytes) -> bool
     if isinstance(key1, bytes):
         bytes1 = key1
     else:
-        bytes1 = marshal_pkix_public_key(key1)
+        bytes1 = encode_public_key(key1)
 
     if isinstance(key2, bytes):
         bytes2 = key2
     else:
-        bytes2 = marshal_pkix_public_key(key2)
+        bytes2 = encode_public_key(key2)
 
     return bytes1 == bytes2

@@ -10,7 +10,7 @@ from pybottle import (
     Bottle,
     MessageFormat,
     new_bottle,
-    marshal,
+    wrap,
     Opener,
     new_opener,
     EMPTY_OPENER,
@@ -19,7 +19,7 @@ from pybottle import (
     Keychain,
     sign,
     verify,
-    marshal_pkix_public_key,
+    encode_public_key,
     parse_pkix_public_key,
     NoAppropriateKeyError,
     VerifyFailedError,
@@ -62,8 +62,8 @@ class TestPKIX:
         private_key = generate_ec_key()
         public_key = private_key.public_key()
 
-        # Marshal
-        der = marshal_pkix_public_key(public_key)
+        # Encode
+        der = encode_public_key(public_key)
         assert isinstance(der, bytes)
         assert len(der) > 0
 
@@ -72,7 +72,7 @@ class TestPKIX:
         assert isinstance(parsed, ec.EllipticCurvePublicKey)
 
         # Verify same key
-        der2 = marshal_pkix_public_key(parsed)
+        der2 = encode_public_key(parsed)
         assert der == der2
 
     def test_ed25519_key_round_trip(self):
@@ -80,11 +80,11 @@ class TestPKIX:
         private_key = generate_ed25519_key()
         public_key = private_key.public_key()
 
-        der = marshal_pkix_public_key(public_key)
+        der = encode_public_key(public_key)
         parsed = parse_pkix_public_key(der)
         assert isinstance(parsed, ed25519.Ed25519PublicKey)
 
-        der2 = marshal_pkix_public_key(parsed)
+        der2 = encode_public_key(parsed)
         assert der == der2
 
     def test_x25519_key_round_trip(self):
@@ -92,11 +92,11 @@ class TestPKIX:
         private_key = generate_x25519_key()
         public_key = private_key.public_key()
 
-        der = marshal_pkix_public_key(public_key)
+        der = encode_public_key(public_key)
         parsed = parse_pkix_public_key(der)
         assert isinstance(parsed, x25519.X25519PublicKey)
 
-        der2 = marshal_pkix_public_key(parsed)
+        der2 = encode_public_key(parsed)
         assert der == der2
 
 
@@ -217,7 +217,7 @@ class TestBottle:
         bottle.sign(private_key)
 
         assert len(bottle.signatures) == 1
-        assert bottle.signatures[0].signer == marshal_pkix_public_key(private_key.public_key())
+        assert bottle.signatures[0].signer == encode_public_key(private_key.public_key())
 
     def test_encrypt_bottle_ec(self):
         """Test encrypting a bottle with EC key."""
@@ -394,7 +394,7 @@ class TestIDCard:
 
         idcard = new_idcard(public_key)
 
-        assert idcard.self_key == marshal_pkix_public_key(public_key)
+        assert idcard.self_key == encode_public_key(public_key)
         assert len(idcard.sub_keys) == 1
         assert idcard.sub_keys[0].has_purpose("sign")
 
@@ -432,8 +432,8 @@ class TestIDCard:
 
         signed = idcard.sign(private_key)
 
-        # Unmarshal
-        parsed = IDCard.unmarshal(signed)
+        # Load
+        parsed = IDCard.load(signed)
 
         assert parsed.self_key == idcard.self_key
         assert parsed.meta["name"] == "Test User"
@@ -481,21 +481,21 @@ class TestKeychain:
 
 
 # ============================================================
-# Marshal/Unmarshal Tests
+# Wrap/Parse Tests
 # ============================================================
 
-class TestMarshal:
-    """Tests for marshal functions."""
+class TestWrap:
+    """Tests for wrap functions."""
 
-    def test_marshal_dict(self):
-        """Test marshaling a dictionary."""
+    def test_wrap_dict(self):
+        """Test wrapping a dictionary."""
         data = {"hello": "world", "count": 42}
-        bottle = marshal(data)
+        bottle = wrap(data)
 
         assert bottle.header["ct"] == "cbor"
 
-        # Open and unmarshal
-        result, _ = EMPTY_OPENER.unmarshal(bottle)
+        # Open and parse
+        result, _ = EMPTY_OPENER.parse(bottle)
         assert result == data
 
 
@@ -517,8 +517,8 @@ class TestStaticKeys:
         assert isinstance(bob, ec.EllipticCurvePrivateKey)
 
         # Verify they're different keys
-        alice_pub = marshal_pkix_public_key(alice.public_key())
-        bob_pub = marshal_pkix_public_key(bob.public_key())
+        alice_pub = encode_public_key(alice.public_key())
+        bob_pub = encode_public_key(bob.public_key())
         assert alice_pub != bob_pub
 
     def test_load_chloe_daniel(self):

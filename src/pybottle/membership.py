@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import cbor2
 
 from .errors import VerifyFailedError
-from .pkix import marshal_pkix_public_key, parse_pkix_public_key
+from .pkix import encode_public_key, parse_pkix_public_key
 from .sign import sign, verify, SigningKeyType
 
 if TYPE_CHECKING:
@@ -63,7 +63,7 @@ class Membership:
         if self.subject is None:
             raise ValueError("Subject must be set before signing")
 
-        pub_bytes = marshal_pkix_public_key(private_key.public_key())
+        pub_bytes = encode_public_key(private_key.public_key())
         self.sign_key = pub_bytes
 
         sig_bytes = self.signature_bytes()

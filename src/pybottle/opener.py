@@ -16,7 +16,7 @@ from .bottle import (
 )
 from .errors import NoAppropriateKeyError, VerifyFailedError
 from .keychain import Keychain
-from .pkix import marshal_pkix_public_key, parse_pkix_public_key
+from .pkix import encode_public_key, parse_pkix_public_key
 from .sign import verify
 from .short import decrypt_short_buffer
 from .utils import memclr
@@ -80,7 +80,7 @@ class OpenResult:
             signer_bytes = signer
         else:
             try:
-                signer_bytes = marshal_pkix_public_key(signer)
+                signer_bytes = encode_public_key(signer)
             except Exception:
                 return False
 
@@ -201,16 +201,16 @@ class Opener:
         """
         return self.open(as_json_bottle(data))
 
-    def unmarshal(self, bottle: Bottle, target_type: type | None = None) -> tuple[Any, OpenResult]:
+    def parse(self, bottle: Bottle, target_type: type | None = None) -> tuple[Any, OpenResult]:
         """
-        Open a bottle and unmarshal its contents.
+        Open a bottle and parse its contents.
 
         Args:
             bottle: The bottle to open
             target_type: Optional type hint (not used, for future compatibility)
 
         Returns:
-            Tuple of (unmarshaled data, OpenResult)
+            Tuple of (parsed data, OpenResult)
         """
         data, result = self.open(bottle)
         last_bottle = result.last()
@@ -225,13 +225,13 @@ class Opener:
         else:
             raise ValueError(f"Unsupported content type: {ct}")
 
-    def unmarshal_cbor(self, data: bytes, target_type: type | None = None) -> tuple[Any, OpenResult]:
-        """Open a CBOR-encoded bottle and unmarshal contents."""
-        return self.unmarshal(as_cbor_bottle(data), target_type)
+    def parse_cbor(self, data: bytes, target_type: type | None = None) -> tuple[Any, OpenResult]:
+        """Open a CBOR-encoded bottle and parse contents."""
+        return self.parse(as_cbor_bottle(data), target_type)
 
-    def unmarshal_json(self, data: bytes, target_type: type | None = None) -> tuple[Any, OpenResult]:
-        """Open a JSON-encoded bottle and unmarshal contents."""
-        return self.unmarshal(as_json_bottle(data), target_type)
+    def parse_json(self, data: bytes, target_type: type | None = None) -> tuple[Any, OpenResult]:
+        """Open a JSON-encoded bottle and parse contents."""
+        return self.parse(as_json_bottle(data), target_type)
 
 
 def new_opener(*keys) -> Opener:

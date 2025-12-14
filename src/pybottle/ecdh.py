@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.asymmetric import ec, x25519
 
 from .errors import DecryptionError, UnsupportedKeyTypeError
-from .pkix import marshal_pkix_public_key, parse_pkix_public_key
+from .pkix import encode_public_key, parse_pkix_public_key
 from .utils import hash_data, memclr
 
 
@@ -110,7 +110,7 @@ def ecdh_encrypt(data: bytes, remote_public_key: ECDHPublicKeyType, rand: bytes 
     secret_hash = bytearray(hash_data(shared_secret, hashlib.sha256))
     try:
         # Serialize ephemeral public key
-        pub_bytes = marshal_pkix_public_key(ephemeral_public)
+        pub_bytes = encode_public_key(ephemeral_public)
 
         # Create AES-GCM cipher
         aesgcm = AESGCM(bytes(secret_hash))

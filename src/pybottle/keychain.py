@@ -5,7 +5,7 @@ from typing import Iterator, Any
 from cryptography.hazmat.primitives.asymmetric import rsa, ec, ed25519, x25519
 
 from .errors import KeyNotFoundError, UnsupportedKeyTypeError
-from .pkix import marshal_pkix_public_key, PrivateKeyType, PublicKeyType
+from .pkix import encode_public_key, PrivateKeyType, PublicKeyType
 from .sign import sign, SigningKeyType
 
 
@@ -47,8 +47,8 @@ class Keychain:
         except AttributeError:
             raise UnsupportedKeyTypeError(f"Key of type {type(key).__name__} does not have a public_key() method")
 
-        # Marshal to PKIX
-        pub_bytes = marshal_pkix_public_key(public_key)
+        # Encode to PKIX
+        pub_bytes = encode_public_key(public_key)
         self._keys[pub_bytes] = key
 
         # Set as signing key if applicable and none set yet
@@ -82,7 +82,7 @@ class Keychain:
         if isinstance(public, bytes):
             pub_bytes = public
         else:
-            pub_bytes = marshal_pkix_public_key(public)
+            pub_bytes = encode_public_key(public)
 
         if pub_bytes in self._keys:
             return self._keys[pub_bytes]

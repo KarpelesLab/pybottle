@@ -8,7 +8,7 @@ import cbor2
 
 from .bottle import Bottle, new_bottle
 from .errors import KeyNotFoundError, KeyUnfitError, GroupNotFoundError
-from .pkix import marshal_pkix_public_key, parse_pkix_public_key, PublicKeyType, keys_equal
+from .pkix import encode_public_key, parse_pkix_public_key, PublicKeyType, keys_equal
 from .sign import SigningKeyType
 
 
@@ -138,7 +138,7 @@ class IDCard:
             KeyNotFoundError: If not found and create=False
         """
         if not isinstance(key, bytes):
-            key_bytes = marshal_pkix_public_key(key)
+            key_bytes = encode_public_key(key)
         else:
             key_bytes = key
 
@@ -171,7 +171,7 @@ class IDCard:
             GroupNotFoundError: If not found
         """
         if not isinstance(key, bytes):
-            key_bytes = marshal_pkix_public_key(key)
+            key_bytes = encode_public_key(key)
         else:
             key_bytes = key
 
@@ -286,9 +286,9 @@ class IDCard:
         return bottle.to_cbor()
 
     @classmethod
-    def unmarshal(cls, data: bytes) -> "IDCard":
+    def load(cls, data: bytes) -> "IDCard":
         """
-        Unmarshal a signed IDCard from bytes.
+        Load a signed IDCard from bytes.
 
         Args:
             data: CBOR-encoded signed bottle
@@ -327,7 +327,7 @@ def new_idcard(public_key: PublicKeyType) -> IDCard:
     Returns:
         A new IDCard
     """
-    pub_bytes = marshal_pkix_public_key(public_key)
+    pub_bytes = encode_public_key(public_key)
     now = datetime.now(timezone.utc)
 
     return IDCard(

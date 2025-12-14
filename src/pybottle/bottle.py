@@ -10,7 +10,7 @@ import cbor2
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from .errors import EncryptNoRecipientError, UnsupportedKeyTypeError
-from .pkix import marshal_pkix_public_key, PublicKeyType
+from .pkix import encode_public_key, PublicKeyType
 from .sign import sign, SigningKeyType
 from .short import encrypt_short_buffer
 from .utils import memclr
@@ -256,7 +256,7 @@ class Bottle:
 
         # Get public key
         public_key = private_key.public_key()
-        pub_bytes = marshal_pkix_public_key(public_key)
+        pub_bytes = encode_public_key(public_key)
 
         # Sign the message
         signature = sign(private_key, self.message)
@@ -288,12 +288,12 @@ def new_bottle(data: bytes) -> Bottle:
     )
 
 
-def marshal(data: Any) -> Bottle:
+def wrap(data: Any) -> Bottle:
     """
     Create a bottle containing CBOR-encoded data.
 
     Args:
-        data: The data to marshal
+        data: The data to wrap
 
     Returns:
         A new Bottle with content-type set to "cbor"
@@ -304,12 +304,12 @@ def marshal(data: Any) -> Bottle:
     return bottle
 
 
-def marshal_json(data: Any) -> Bottle:
+def wrap_json(data: Any) -> Bottle:
     """
     Create a bottle containing JSON-encoded data.
 
     Args:
-        data: The data to marshal
+        data: The data to wrap
 
     Returns:
         A new Bottle with content-type set to "json"
@@ -371,7 +371,7 @@ def _make_recipients(key: bytes, recipient: PublicKeyType | KeyProvider) -> list
     # It's a public key
     try:
         encrypted = encrypt_short_buffer(key, recipient)
-        pub_bytes = marshal_pkix_public_key(recipient)
+        pub_bytes = encode_public_key(recipient)
         return [MessageRecipient(type=0, recipient=pub_bytes, data=encrypted)]
     except UnsupportedKeyTypeError:
         return []

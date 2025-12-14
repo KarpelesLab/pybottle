@@ -14,8 +14,8 @@ from .bottle import (
     MessageRecipient,
     MessageSignature,
     new_bottle,
-    marshal,
-    marshal_json,
+    wrap,
+    wrap_json,
     as_cbor_bottle,
     as_json_bottle,
 )
@@ -54,7 +54,7 @@ from .errors import (
 )
 
 from .sign import sign, verify
-from .pkix import marshal_pkix_public_key, parse_pkix_public_key
+from .pkix import encode_public_key, parse_pkix_public_key
 from . import testkeys
 
 __version__ = "0.1.0"
@@ -66,8 +66,8 @@ __all__ = [
     "MessageRecipient",
     "MessageSignature",
     "new_bottle",
-    "marshal",
-    "marshal_json",
+    "wrap",
+    "wrap_json",
     "as_cbor_bottle",
     "as_json_bottle",
     # Opener
@@ -98,7 +98,7 @@ __all__ = [
     # Utilities
     "sign",
     "verify",
-    "marshal_pkix_public_key",
+    "encode_public_key",
     "parse_pkix_public_key",
     # Version
     "__version__",

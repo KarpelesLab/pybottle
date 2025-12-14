@@ -116,20 +116,20 @@ opener = new_opener(encrypt_key)
 data, result = opener.open(bottle)
 ```
 
-### Marshaling Data
+### Wrapping Data
 
 ```python
-from pybottle import marshal, EMPTY_OPENER
+from pybottle import wrap, EMPTY_OPENER
 
-# Marshal a Python object to a bottle
+# Wrap a Python object in a bottle
 data = {"user": "alice", "action": "login", "timestamp": 1234567890}
-bottle = marshal(data)
+bottle = wrap(data)
 
 # The content-type is automatically set
 print(bottle.header["ct"])  # "cbor"
 
-# Unmarshal back
-result_data, _ = EMPTY_OPENER.unmarshal(bottle)
+# Parse it back
+result_data, _ = EMPTY_OPENER.parse(bottle)
 print(result_data)  # {"user": "alice", ...}
 ```
 
@@ -153,8 +153,8 @@ bob = get_bob()
 ### Bottle Functions
 
 - `new_bottle(data: bytes) -> Bottle` - Create a new bottle with raw data
-- `marshal(data: Any) -> Bottle` - Create a bottle with CBOR-encoded data
-- `marshal_json(data: Any) -> Bottle` - Create a bottle with JSON-encoded data
+- `wrap(data: Any) -> Bottle` - Create a bottle with CBOR-encoded data
+- `wrap_json(data: Any) -> Bottle` - Create a bottle with JSON-encoded data
 
 ### Bottle Methods
 
@@ -173,7 +173,7 @@ bob = get_bob()
 
 - `opener.open(bottle) -> (bytes, OpenResult)` - Open a bottle
 - `opener.open_cbor(data) -> (bytes, OpenResult)` - Open CBOR-encoded bottle
-- `opener.unmarshal(bottle) -> (Any, OpenResult)` - Open and unmarshal
+- `opener.parse(bottle) -> (Any, OpenResult)` - Open and parse contents
 
 ### OpenResult
 
