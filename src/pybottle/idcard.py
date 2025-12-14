@@ -12,6 +12,18 @@ from .pkix import marshal_pkix_public_key, parse_pkix_public_key, PublicKeyType,
 from .sign import SigningKeyType
 
 
+def _parse_timestamp(value) -> datetime:
+    """Parse a timestamp from various formats."""
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, (int, float)):
+        # Unix timestamp
+        return datetime.fromtimestamp(value, tz=timezone.utc)
+    if isinstance(value, str):
+        return datetime.fromisoformat(value)
+    raise ValueError(f"Cannot parse timestamp from {type(value)}")
+
+
 @dataclass
 class SubKey:
     """A subkey in an IDCard."""
@@ -51,10 +63,11 @@ class SubKey:
     @classmethod
     def from_cbor_dict(cls, d: dict) -> "SubKey":
         """Create from CBOR dict with integer keys."""
+        expires = d.get(3)
         return cls(
             key=d[1],
-            issued=d[2] if isinstance(d[2], datetime) else datetime.fromisoformat(d[2]),
-            expires=d.get(3),
+            issued=_parse_timestamp(d[2]),
+            expires=_parse_timestamp(expires) if expires is not None else None,
             purposes=d.get(4, []),
         )
 
@@ -236,11 +249,11 @@ class IDCard:
 
         return cls(
             self_key=d[1],
-            issued=d[2] if isinstance(d[2], datetime) else datetime.fromisoformat(d[2]),
-            sub_keys=[SubKey.from_cbor_dict(s) for s in d.get(3, [])],
-            revoke=[SubKey.from_cbor_dict(r) for r in d.get(4, [])],
-            groups=[Membership.from_cbor_dict(g) for g in d.get(5, [])],
-            meta=d.get(6, {}),
+            issued=_parse_timestamp(d[2]),
+            sub_keys=[SubKey.from_cbor_dict(s) for s in (d.get(3) or [])],
+            revoke=[SubKey.from_cbor_dict(r) for r in (d.get(4) or [])],
+            groups=[Membership.from_cbor_dict(g) for g in (d.get(5) or [])],
+            meta=d.get(6) or {},
         )
 
     def to_cbor(self) -> bytes:
