@@ -57,7 +57,7 @@ from .sign import sign, verify
 from .pkix import encode_public_key, parse_pkix_public_key
 from . import testkeys
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 __all__ = [
     # Bottle
