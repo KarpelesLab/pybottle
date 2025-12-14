@@ -113,47 +113,70 @@ class Bottle:
     def to_json(self) -> bytes:
         """Serialize to JSON bytes."""
         import base64
+
+        def b64url(data: bytes) -> str:
+            """Encode bytes as base64url without padding (RFC 4648 Section 5)."""
+            return base64.urlsafe_b64encode(data).rstrip(b'=').decode('ascii')
+
+        def recipient_to_json(r: MessageRecipient) -> dict:
+            """Convert recipient to JSON, omitting typ when zero."""
+            result = {"key": b64url(r.recipient), "dat": b64url(r.data)}
+            if r.type != 0:
+                result["typ"] = r.type
+            return result
+
+        def signature_to_json(s: MessageSignature) -> dict:
+            """Convert signature to JSON, omitting typ when zero."""
+            result = {"key": b64url(s.signer), "dat": b64url(s.data)}
+            if s.type != 0:
+                result["typ"] = s.type
+            return result
+
         obj = {
-            "hdr": self.header,
-            "msg": base64.b64encode(self.message).decode('ascii'),
+            "msg": b64url(self.message),
             "fmt": int(self.format),
-            "dst": [
-                {"typ": r.type, "key": base64.b64encode(r.recipient).decode('ascii'),
-                 "dat": base64.b64encode(r.data).decode('ascii')}
-                for r in self.recipients
-            ] if self.recipients else None,
-            "sig": [
-                {"typ": s.type, "key": base64.b64encode(s.signer).decode('ascii'),
-                 "dat": base64.b64encode(s.data).decode('ascii')}
-                for s in self.signatures
-            ] if self.signatures else None,
         }
-        # Remove None values
-        obj = {k: v for k, v in obj.items() if v is not None}
+        # Only include non-empty fields (per spec Section 7.1)
+        if self.header:
+            obj["hdr"] = self.header
+        if self.recipients:
+            obj["dst"] = [recipient_to_json(r) for r in self.recipients]
+        if self.signatures:
+            obj["sig"] = [signature_to_json(s) for s in self.signatures]
+
         return json.dumps(obj).encode('utf-8')
 
     @classmethod
     def from_json(cls, data: bytes) -> "Bottle":
         """Deserialize from JSON bytes."""
         import base64
+
+        def b64url_decode(s: str) -> bytes:
+            """Decode base64url without padding (RFC 4648 Section 5)."""
+            # Add padding if needed
+            padding = 4 - (len(s) % 4)
+            if padding != 4:
+                s += '=' * padding
+            return base64.urlsafe_b64decode(s)
+
         obj = json.loads(data)
         return cls(
             header=obj.get("hdr", {}),
-            message=base64.b64decode(obj.get("msg", "")),
+            message=b64url_decode(obj.get("msg", "")),
             format=MessageFormat(obj.get("fmt", 0)),
             recipients=[
                 MessageRecipient(
                     type=r.get("typ", 0),
-                    recipient=base64.b64decode(r["key"]),
-                    data=base64.b64decode(r["dat"]),
+                    recipient=b64url_decode(r["key"]),
+                    data=b64url_decode(r["dat"]),
                 )
                 for r in obj.get("dst", [])
             ] if obj.get("dst") else [],
             signatures=[
                 MessageSignature(
                     type=s.get("typ", 0),
-                    signer=base64.b64decode(s["key"]),
-                    data=base64.b64decode(s["dat"]),
+                    signer=b64url_decode(s["key"]),
+                    data=b64url_decode(s["dat"]),
                 )
                 for s in obj.get("sig", [])
             ] if obj.get("sig") else [],
