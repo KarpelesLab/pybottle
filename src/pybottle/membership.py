@@ -103,8 +103,7 @@ class Membership:
 
     def to_cbor_dict(self) -> dict:
         """Convert to CBOR dict format with integer keys."""
-        return {
-            1: self.subject,
+        result = {
             2: self.key,
             3: self.status,
             4: self.issued,
@@ -112,6 +111,10 @@ class Membership:
             6: self.sign_key,
             7: self.signature,
         }
+        # Subject is omitted when stored in IDCard's Groups array (per spec 5.6)
+        if self.subject is not None:
+            result[1] = self.subject
+        return result
 
     @classmethod
     def from_cbor_dict(cls, d: dict) -> "Membership":
