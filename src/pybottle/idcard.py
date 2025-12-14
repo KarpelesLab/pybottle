@@ -51,13 +51,14 @@ class SubKey:
 
     def to_cbor_dict(self) -> dict:
         """Convert to CBOR dict format with integer keys."""
+        # Use Unix timestamp (integer) for issued/expires to match Go
         result = {
             1: self.key,
-            2: self.issued,
-            4: self.purposes,
+            2: int(self.issued.timestamp()),
+            4: self.purposes if self.purposes else None,
         }
         if self.expires is not None:
-            result[3] = self.expires
+            result[3] = int(self.expires.timestamp())
         return result
 
     @classmethod
@@ -232,13 +233,15 @@ class IDCard:
 
     def to_cbor_dict(self) -> dict:
         """Convert to CBOR dict format with integer keys."""
+        # Use Unix timestamp (integer) for issued to match Go
+        # Use None instead of [] or {} for empty collections to match Go's nil slices
         result = {
             1: self.self_key,
-            2: self.issued,
-            3: [s.to_cbor_dict() for s in self.sub_keys],
-            4: [r.to_cbor_dict() for r in self.revoke],
-            5: [g.to_cbor_dict() for g in self.groups],
-            6: self.meta,
+            2: int(self.issued.timestamp()),
+            3: [s.to_cbor_dict() for s in self.sub_keys] if self.sub_keys else None,
+            4: [r.to_cbor_dict() for r in self.revoke] if self.revoke else None,
+            5: [g.to_cbor_dict() for g in self.groups] if self.groups else None,
+            6: self.meta if self.meta else None,
         }
         return result
 

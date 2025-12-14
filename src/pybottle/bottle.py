@@ -81,12 +81,14 @@ class Bottle:
 
     def to_cbor_array(self) -> list:
         """Convert to CBOR array format (matches Go's cbor:",toarray")."""
+        # Note: Empty recipients/signatures must be None (null in CBOR), not []
+        # This matches Go's behavior where nil slices encode as null
         return [
             self.header,
             self.message,
             int(self.format),
-            [r.to_cbor_array() for r in self.recipients] if self.recipients else [],
-            [s.to_cbor_array() for s in self.signatures] if self.signatures else [],
+            [r.to_cbor_array() for r in self.recipients] if self.recipients else None,
+            [s.to_cbor_array() for s in self.signatures] if self.signatures else None,
         ]
 
     @classmethod
